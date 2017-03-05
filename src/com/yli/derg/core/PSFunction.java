@@ -16,6 +16,7 @@ import java.util.List;
  * Package: DERG
  */
 public class PSFunction {
+    protected Object base;
     protected List<Object> parameters;
 
     protected InvokeExpr invokeExpr;
@@ -44,6 +45,21 @@ public class PSFunction {
             else
                 this.parameters.add(parameterDef);
         }
+        if (this.invokeExpr instanceof InstanceInvokeExpr) {
+            String baseType = this.invokeExpr.getMethod().getDeclaringClass().getShortName();
+            switch (baseType) {
+                case "UQI":
+                    this.base = "UQI";
+                    break;
+                case "IMultiItemStream":
+                case "ISingleItemStream":
+                    this.base = "";
+                    break;
+                default:
+                    this.base = this.getParameterDef(((InstanceInvokeExpr) this.invokeExpr).getBase(), this.hostUnit);
+                    break;
+            }
+        }
     }
 
     private Object getParameterDef(Value parameter, Unit currentUnit) {
@@ -54,7 +70,7 @@ public class PSFunction {
             List<Unit> paraDefs = this.localDefs.getDefsOfAt((Local) parameter, currentUnit);
             if (paraDefs.size() == 1 && paraDefs.get(0) instanceof AbstractDefinitionStmt) {
                 AbstractDefinitionStmt stmt = (AbstractDefinitionStmt) paraDefs.get(0);
-                if (stmt.getRightOp() instanceof StaticInvokeExpr) {
+                if (stmt.getRightOp() instanceof InvokeExpr) {
                     return new PSFunction((InvokeExpr) stmt.getRightOp(), stmt, this.hostMethod, this.hostBody, this.localDefs, this.localUses);
                 }
                 if (stmt.getRightOp() instanceof NewArrayExpr) {
@@ -74,14 +90,24 @@ public class PSFunction {
                     }
                     return parameterArray;
                 }
+                if (stmt.getRightOp() instanceof Local) {
+                    return this.getParameterDef(stmt.getRightOp(), stmt);
+                }
             }
         }
         return null;
     }
 
     public String toString() {
-        return String.format("%s.%s(%s)",
-                this.invokeExpr.getMethod().getDeclaringClass().getShortName(),
-                this.invokeExpr.getMethod().getName(), StringUtils.join(this.parameters, ", "));
+        if (this.invokeExpr instanceof InstanceInvokeExpr) {
+            return String.format("%s.%s(%s)",
+                    this.base,
+                    this.invokeExpr.getMethod().getName(), StringUtils.join(this.parameters, ", "));
+        }
+        else {
+            return String.format("%s.%s(%s)",
+                    this.invokeExpr.getMethod().getDeclaringClass().getShortName(),
+                    this.invokeExpr.getMethod().getName(), StringUtils.join(this.parameters, ", "));
+        }
     }
 }
