@@ -40,7 +40,7 @@ public class PSFunction {
         for (Value parameter : this.invokeExpr.getArgs()) {
             Object parameterDef = this.getParameterDef(parameter, this.hostUnit);
             if (parameterDef == null)
-                this.parameters.add("<unknown>");
+                this.parameters.add(parameter);
             else
                 this.parameters.add(parameterDef);
         }
@@ -54,7 +54,7 @@ public class PSFunction {
             List<Unit> paraDefs = this.localDefs.getDefsOfAt((Local) parameter, currentUnit);
             if (paraDefs.size() == 1 && paraDefs.get(0) instanceof AbstractDefinitionStmt) {
                 AbstractDefinitionStmt stmt = (AbstractDefinitionStmt) paraDefs.get(0);
-                if (stmt.getRightOp() instanceof InvokeExpr) {
+                if (stmt.getRightOp() instanceof StaticInvokeExpr) {
                     return new PSFunction((InvokeExpr) stmt.getRightOp(), stmt, this.hostMethod, this.hostBody, this.localDefs, this.localUses);
                 }
                 if (stmt.getRightOp() instanceof NewArrayExpr) {

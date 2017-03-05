@@ -19,7 +19,7 @@ import java.util.List;
  */
 public class PSPipeline extends PSFunction {
 
-    protected List<PSPipeline> nextPipelines;
+    protected List<Object> nextPipelines;
 
     public PSPipeline(InvokeExpr invokeExpr, Unit hostUnit, SootMethod hostMethod, Body hostBody, LocalDefs localDefs, LocalUses localUses) {
         super(invokeExpr, hostUnit, hostMethod, hostBody, localDefs, localUses);
@@ -29,6 +29,12 @@ public class PSPipeline extends PSFunction {
 
     private void findNextPipelines() {
         List<UnitValueBoxPair> uses = this.localUses.getUsesOf(this.hostUnit);
+
+        Value definedValue = null;
+        if (this.hostUnit instanceof AbstractDefinitionStmt) {
+            definedValue = ((AbstractDefinitionStmt) this.hostUnit).getLeftOp();
+        }
+
         for (UnitValueBoxPair unitValueBoxPair : uses) {
             Unit useUnit = unitValueBoxPair.getUnit();
 
@@ -48,7 +54,7 @@ public class PSPipeline extends PSFunction {
                 this.nextPipelines.add(new PSPipeline(invokeExpr, useUnit, hostMethod, hostBody, localDefs, localUses));
                 continue;
             }
-            this.nextPipelines.add(null);
+            this.nextPipelines.add(definedValue);
 
         }
     }
@@ -56,10 +62,11 @@ public class PSPipeline extends PSFunction {
     public String toString(int indent) {
         String thisIndent = StringUtils.repeat(" ", indent);
         String result = thisIndent + super.toString();
-        for (PSPipeline psPipeline : this.nextPipelines) {
+        for (Object psPipeline : this.nextPipelines) {
             result += "\n";
             if (psPipeline == null) result += StringUtils.repeat(" ", indent + 2) + "<unknown>";
-            else result += psPipeline.toString(indent + 2);
+            else if (psPipeline instanceof PSPipeline) result += ((PSPipeline)psPipeline).toString(indent + 2);
+            else result += StringUtils.repeat(" ", indent + 2) + psPipeline;
         }
         return result;
     }
