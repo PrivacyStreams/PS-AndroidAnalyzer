@@ -2,8 +2,6 @@ package com.yli.derg.frontends;
 
 import com.yli.derg.core.Graph;
 import com.yli.derg.frontends.soot.ApkAnalyzer;
-import com.yli.derg.frontends.soot.SimpleSootBuilder;
-import com.yli.derg.frontends.soot.SootBuilder;
 import com.yli.derg.frontends.json.JSONBuilder;
 import com.yli.derg.utils.Util;
 import org.apache.commons.cli.ParseException;
@@ -19,7 +17,7 @@ public abstract class DERGFrontend {
     public static HashMap<String, DERGFrontend> availableFrontends = new HashMap<>();
     public static String defaultFrontend = "";
     public static void registerFrontends() {
-        defaultFrontend = SootBuilder.NAME;
+        defaultFrontend = ApkAnalyzer.NAME;
 //        availableFrontends.put(SootBuilder.NAME, new SootBuilder());
 //        availableFrontends.put(SimpleSootBuilder.NAME, new SimpleSootBuilder());
         availableFrontends.put(ApkAnalyzer.NAME, new ApkAnalyzer());

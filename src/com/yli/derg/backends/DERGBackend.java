@@ -1,10 +1,6 @@
 package com.yli.derg.backends;
 
-import com.yli.derg.backends.dict_build.DictBuilder;
 import com.yli.derg.backends.graph_export.GraphExporter;
-import com.yli.derg.backends.method_permission.MethodPermissionExtractor;
-import com.yli.derg.backends.method_profile.MethodProfileBuilder;
-import com.yli.derg.backends.nice2predict.Nice2Predict;
 import com.yli.derg.core.Graph;
 import com.yli.derg.utils.Util;
 import org.apache.commons.cli.ParseException;
@@ -22,10 +18,6 @@ public abstract class DERGBackend {
     public static void registerBackends() {
         defaultBackend = GraphExporter.NAME;
         availableBackends.put(GraphExporter.NAME, new GraphExporter());
-//        availableBackends.put(MethodProfileBuilder.NAME, new MethodProfileBuilder());
-//        availableBackends.put(DictBuilder.NAME, new DictBuilder());
-//        availableBackends.put(Nice2Predict.NAME, new Nice2Predict());
-//        availableBackends.put(MethodPermissionExtractor.NAME, new MethodPermissionExtractor());
     }
     public static String getAvailableBackends() {
         return StringUtils.join(availableBackends.keySet(), "/");
