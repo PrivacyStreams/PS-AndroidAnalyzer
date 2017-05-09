@@ -235,6 +235,8 @@ public class ApkAnalyzer extends DERGFrontend {
         Set<SootMethod> pendingMethods = new HashSet<>();
 
         for (SootClass cls : this.applicationClasses) {
+            // Skip library package
+            if (cls.getPackageName().startsWith(Const.psPackage)) continue;
             List<SootMethod> methods = new ArrayList<>();
             for (SootMethod method : cls.getMethods()) {
                 methods.add(method);

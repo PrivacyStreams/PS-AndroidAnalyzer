@@ -50,7 +50,7 @@ public class PSPipeline extends PSFunction {
                 invokeExpr = ((InvokeStmt) useUnit).getInvokeExpr();
             }
 
-            if (invokeExpr != null && invokeExpr.getMethod().getDeclaringClass().getShortName().contains("ItemStream")) {
+            if (invokeExpr != null && invokeExpr.getMethod().getDeclaringClass().getShortName().contains("Stream")) {
                 this.nextPipelines.add(new PSPipeline(invokeExpr, useUnit, hostMethod, hostBody, localDefs, localUses));
                 continue;
             }

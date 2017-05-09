@@ -51,8 +51,8 @@ public class PSFunction {
                 case "UQI":
                     this.base = "UQI";
                     break;
-                case "IMultiItemStream":
-                case "ISingleItemStream":
+                case "MStream":
+                case "SStream":
                     this.base = "";
                     break;
                 default:
