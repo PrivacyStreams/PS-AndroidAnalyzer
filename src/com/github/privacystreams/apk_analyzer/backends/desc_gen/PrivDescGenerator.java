@@ -3,6 +3,7 @@ package com.github.privacystreams.apk_analyzer.backends.desc_gen;
 import com.github.privacystreams.apk_analyzer.Config;
 import com.github.privacystreams.apk_analyzer.backends.DERGBackend;
 import com.github.privacystreams.apk_analyzer.core.Graph;
+import com.github.privacystreams.apk_analyzer.core.PSPipeline;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -17,12 +18,9 @@ public class PrivDescGenerator extends DERGBackend {
 
     @Override
     public void run(Graph g) {
-        String export_file_name = String.format("%s/derg.json", Config.outputDir);
-        File export_file = new File(export_file_name);
-        try {
-            FileUtils.writeStringToFile(export_file, g.toJson().toString(2), "UTF-8");
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (g.pipelines == null) return;
+        for (PSPipeline pipeline : g.pipelines) {
+            pipeline.toString();
         }
     }
 }

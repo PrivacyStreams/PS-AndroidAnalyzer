@@ -14,6 +14,10 @@ public class Graph {
     public ArrayList<Edge> edges;
     public Node v_root;
 
+    public List<PSPipeline> pipelines;
+    public Map<String, String> psMethod2Sig;
+    public Set<String> androidApiUsed;
+
     private static final String rootCode = "DERG_ROOT";
     private HashMap<Object, Node> obj2nodeMap;
 
@@ -21,6 +25,8 @@ public class Graph {
         obj2nodeMap = new HashMap<>();
         nodes = new ArrayList<>();
         edges = new ArrayList<>();
+        psMethod2Sig = new HashMap<>();
+        androidApiUsed = new HashSet<>();
     }
 
     public Node genDefaultRoot() {

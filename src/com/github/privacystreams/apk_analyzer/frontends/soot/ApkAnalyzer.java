@@ -10,13 +10,12 @@ import com.github.privacystreams.apk_analyzer.frontends.DERGFrontend;
 import com.github.privacystreams.apk_analyzer.utils.IgnoreUnknownTokenParser;
 import com.github.privacystreams.apk_analyzer.utils.Util;
 import org.apache.commons.cli.*;
+import org.apache.commons.codec.digest.DigestUtils;
 import soot.*;
 import soot.jimple.*;
 import soot.jimple.internal.AbstractDefinitionStmt;
-import soot.jimple.internal.JAssignStmt;
 import soot.options.Options;
 import soot.toolkits.graph.BriefUnitGraph;
-import soot.toolkits.graph.UnitGraph;
 import soot.toolkits.scalar.*;
 
 import java.io.File;
@@ -231,12 +230,25 @@ public class ApkAnalyzer extends DERGFrontend {
     SootMethod getMStreamAPI;
     SootMethod getSStreamAPI;
 
+    private Map<String, String> psMethod2Sig = new HashMap<>();
+    private Set<String> androidApiUsed = new HashSet<>();
+
     private Set<SootMethod> findPendingMethods() {
         Set<SootMethod> pendingMethods = new HashSet<>();
 
         for (SootClass cls : this.applicationClasses) {
-            // Skip library package
-            if (cls.getPackageName().startsWith(Const.psPackage)) continue;
+            if (cls.getPackageName().startsWith(Const.psPackage)) {
+                List<SootMethod> psMethods = new ArrayList<>();
+                for (SootMethod method : cls.getMethods()) {
+                    psMethods.add(method);
+                }
+                for (SootMethod method : psMethods) {
+                    if (method.getSource() == null) continue;
+                    String methodSig = this.getPSMethodSig(method);
+                    psMethod2Sig.put(method.getSignature(), methodSig);
+                }
+            }
+
             List<SootMethod> methods = new ArrayList<>();
             for (SootMethod method : cls.getMethods()) {
                 methods.add(method);
@@ -257,6 +269,9 @@ public class ApkAnalyzer extends DERGFrontend {
                                 pendingMethods.add(method);
                                 break;
                             }
+                            if (!invokedMethod.getDeclaringClass().isApplicationClass()) {
+                                androidApiUsed.add(invokedMethod.getSignature());
+                            }
                         }
                     }
                 }
@@ -266,6 +281,35 @@ public class ApkAnalyzer extends DERGFrontend {
             }
         }
         return pendingMethods;
+    }
+
+    private String getPSMethodSig(SootMethod method) {
+        try {
+            Body body = method.retrieveActiveBody();
+
+            Set<String> methodSigs = new HashSet<>();
+
+            for (ValueBox valueBox : body.getUseAndDefBoxes()) {
+                Value value = valueBox.getValue();
+                if (value instanceof FieldRef) {
+                    if (((FieldRef) value).getField().getDeclaringClass().isApplicationClass()) continue;
+                    methodSigs.add(((FieldRef) value).getField().getSignature());
+                } else if (value instanceof InvokeExpr) {
+                    if (((InvokeExpr) value).getMethod().getDeclaringClass().isApplicationClass()) continue;
+                    methodSigs.add(((InvokeExpr) value).getMethod().getSignature());
+                } else if (value instanceof Constant) {
+                    methodSigs.add(value.toString());
+                }
+            }
+
+            List<String> sortedMethodSigs = new ArrayList<>(methodSigs);
+            Collections.sort(sortedMethodSigs);
+            return DigestUtils.sha256Hex(sortedMethodSigs.toString());
+        }
+        catch (Exception e) {
+            Util.logException(e);
+        }
+        return "<UNKNOWN>";
     }
 
     private List<PSPipeline> findDFGInMethod(Graph g, SootMethod method) {
@@ -327,6 +371,10 @@ public class ApkAnalyzer extends DERGFrontend {
         for (PSPipeline psPipeline : pipelines) {
             System.out.println(psPipeline);
         }
+
+        g.pipelines = pipelines;
+        g.psMethod2Sig = psMethod2Sig;
+        g.androidApiUsed = androidApiUsed;
 
         Util.LOGGER.info("finished building PrivacyStreams DFG");
         return g;
