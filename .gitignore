@@ -4,3 +4,4 @@ output*
 dependency-reduced-pom.xml
 examples
 .idea
+*.DS_Store
